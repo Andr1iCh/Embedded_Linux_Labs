@@ -1,0 +1,12 @@
+[Unit]
+Description=System telemetry monitor with GPIO temperature LED
+
+[Service]
+Type=simple
+WorkingDirectory=/home/arpi/sys_monitor
+ExecStart=/home/arpi/sys_monitor/.venv/bin/python /home/arpi/sys_monitor/sys_monitor.py --chip /dev/gpiochip0 --csv /home/arpi/sys_monitor/telemetry.csv
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,3 @@
+SUBSYSTEM=="tty", KERNEL=="ttyUSB*", ATTRS{idVendor}=="REPLACE_VID", ATTRS{idProduct}=="REPLACE_PID", SYMLINK+="uart_compass", MODE="0666"
+
+ATTR{idVendor}=="REPLACE_SDR_VID", ATTR{idProduct}=="REPLACE_SDR_PID", ATTR{serial}=="REPLACE_SDR_SERIAL", SYMLINK+="sdr_primary", MODE="0666"
