@@ -14,7 +14,7 @@
 
 PL2303 підключено до USB-порту Raspberry Pi. TX і RX самого адаптера з'єднано між собою. GPIO Raspberry Pi не використовуються. Перемичка вибору напруги залишається в положенні 3.3 V, для TX–RX використовується окрема перемичка.
 
-![alt text](image-1.png)
+<img width="2560" height="1436" alt="image-1" src="https://github.com/user-attachments/assets/512005b2-b460-4642-889c-6097a23153e9" />
 
 ## Виконання та перевірка
 
@@ -33,8 +33,7 @@ sudo apt install python3-serial usbutils
 ```bash
 lsusb
 ```
-
-![Підключені USB-пристрої](image-2.png)
+<img width="950" height="139" alt="image-2" src="https://github.com/user-attachments/assets/95d7e765-acf8-4667-a952-ab89f4a2cb0d" />
 
 Перевіряємо ім'я USB-UART порту та переглядаємо ідентифікатори адаптера:
 
@@ -42,9 +41,7 @@ lsusb
 ls -l /dev/ttyUSB*
 udevadm info -a -n /dev/ttyUSB0 | grep -E 'idVendor|idProduct|serial'
 ```
-
-![USB-UART порт та атрибути пристрою](image-3.png)
-
+<img width="1118" height="242" alt="image-3" src="https://github.com/user-attachments/assets/219219ff-e3b4-42a5-9843-ca70b1429187" />
 
 **2. Створення та застосування правила udev**
 
@@ -54,9 +51,7 @@ udevadm info -a -n /dev/ttyUSB0 | grep -E 'idVendor|idProduct|serial'
 python3 generate_rules.py /dev/ttyUSB0
 cat 99-radio-monitor.rules
 ```
-
-![alt text](image.png)
-
+<img width="1049" height="213" alt="image" src="https://github.com/user-attachments/assets/ae44204e-1916-48b6-b81d-5b5ddd4df884" />
 
 Копіюємо файл у системний каталог правил udev:
 
@@ -88,8 +83,7 @@ sudo udevadm settle
 ls -l /dev/uart_compass
 stat -L -c '%a %n' /dev/uart_compass
 ```
-
-![alt text](image-4.png)
+<img width="799" height="96" alt="image-4" src="https://github.com/user-attachments/assets/bce9d1c2-1127-4cfa-a12b-02513cbd375b" />
 
 **3. Перевірка передачі даних без sudo**
 
@@ -99,8 +93,7 @@ stat -L -c '%a %n' /dev/uart_compass
 python3 check_hardware.py --loopback --skip-sdr
 echo $?
 ```
-
-![alt text](image-5.png)
+<img width="846" height="192" alt="image-5" src="https://github.com/user-attachments/assets/48876315-6628-41d9-bb44-68372d8d67c7" />
 
 **4. Перевірка після перепідключення**
 
@@ -110,8 +103,7 @@ echo $?
 sudo udevadm settle
 ls -l /dev/uart_compass
 ```
-
-![alt text](image-6.png)
+<img width="802" height="48" alt="image-6" src="https://github.com/user-attachments/assets/047d3be7-6ce5-42e4-a5e1-1d95ec92be41" />
 
 Повторно перевіряємо передачу байтів без перевстановлення правила:
 
@@ -119,5 +111,5 @@ ls -l /dev/uart_compass
 python3 check_hardware.py --loopback --skip-sdr
 echo $?
 ```
+<img width="868" height="187" alt="image-7" src="https://github.com/user-attachments/assets/3c7dc169-600b-41da-bd67-d5ac84758222" />
 
-![alt text](image-7.png)
