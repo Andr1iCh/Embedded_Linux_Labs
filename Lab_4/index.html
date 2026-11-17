@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SDR Web Monitor</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; background: #111827; color: #e5e7eb; font-family: Arial, sans-serif; }
+    main { max-width: 850px; margin: auto; }
+    h1 { font-size: 26px; }
+    .panel { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 18px; margin-top: 18px; }
+    canvas { display: block; width: 100%; height: auto; background: #0b1220; }
+    .range { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; margin-top: 8px; }
+    form { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    label { width: 100%; }
+    input, button { font: inherit; border-radius: 6px; padding: 12px; }
+    input { width: 180px; max-width: 100%; border: 1px solid #9ca3af; background: white; color: #111827; }
+    button { border: 0; background: #2563eb; color: white; cursor: pointer; }
+    button:disabled { opacity: 0.6; }
+    #connection { color: #93c5fd; }
+    #commandStatus { min-height: 20px; }
+    .note { color: #cbd5e1; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>SDR Web Monitor</h1>
+    <p class="note">Режим імітації · SDR не підключено</p>
+    <p id="connection" role="status">Підключення до потоку спектра…</p>
+    <section class="panel" aria-label="Спектр сигналу">
+      <p>Поточна частота: <strong id="currentFrequency">—</strong> МГц</p>
+      <canvas id="spectrum" width="800" height="300" aria-label="Імітований спектр"></canvas>
+      <div class="range"><span id="leftFrequency">—</span><span>Частота, МГц</span><span id="rightFrequency">—</span></div>
+      <p class="note">Амплітуда: 0–100 умовних одиниць. Ширина огляду: 2 МГц.</p>
+    </section>
+    <section class="panel" aria-label="Керування частотою">
+      <form id="frequencyForm">
+        <label for="frequencyInput">Центральна частота, МГц (1–2000)</label>
+        <input id="frequencyInput" type="number" min="1" max="2000" step="any" value="100.5" required>
+        <button id="applyButton" type="submit">Встановити</button>
+      </form>
+      <p id="commandStatus" role="status"></p>
+      <p class="note">Для перевірки змініть частоту зі 100.5 на 101 МГц: імітований пік зміститься ліворуч. Частота спільна для всіх клієнтів.</p>
+    </section>
+  </main>
+  <script>
+    const canvas = document.getElementById("spectrum");
+    const ctx = canvas.getContext("2d");
+    const connection = document.getElementById("connection");
+    const input = document.getElementById("frequencyInput");
+    const commandStatus = document.getElementById("commandStatus");
+    const button = document.getElementById("applyButton");
+
+    // Вибираємо ws для HTTP або wss для HTTPS і підключаємося до сервера цієї сторінки.
+    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${protocol}//${location.host}/ws/spectrum`);
+
+    ws.onopen = function () {
+      connection.textContent = "WebSocket підключено. Очікування даних…";
+    };
+
+    ws.onmessage = function (event) {
+      // Перетворюємо JSON-повідомлення на об'єкт і передаємо масив амплітуд у функцію малювання.
+      const data = JSON.parse(event.data);
+      drawSpectrum(data.fft_data);
+      document.getElementById("currentFrequency").textContent = data.frequency_mhz.toFixed(3);
+      document.getElementById("leftFrequency").textContent = (data.frequency_mhz - data.span_mhz / 2).toFixed(3);
+      document.getElementById("rightFrequency").textContent = (data.frequency_mhz + data.span_mhz / 2).toFixed(3);
+      connection.textContent = "Потік активний · отримано " + data.fft_data.length + " точок · імітація";
+    };
+
+    ws.onclose = function () {
+      connection.textContent = "Потік відключено. Для повторного підключення оновіть сторінку.";
+    };
+    ws.onerror = function () {
+      connection.textContent = "Помилка WebSocket-з'єднання.";
+    };
+
+    function drawSpectrum(values) {
+      // Очищаємо попередній кадр і малюємо горизонтальні лінії шкали амплітуди.
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 1;
+      for (let level = 0; level <= 100; level += 25) {
+        const y = canvas.height - level / 100 * canvas.height;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Перетворюємо індекси точок у X, а амплітуди — у Y і з'єднуємо точки лінією.
+      ctx.beginPath();
+      ctx.strokeStyle = "#34d399";
+      ctx.lineWidth = 2;
+      for (let i = 0; i < values.length; i++) {
+        const x = i / (values.length - 1) * canvas.width;
+        const y = canvas.height - values[i] / 100 * canvas.height;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    document.getElementById("frequencyForm").addEventListener("submit", async function (event) {
+      // Зупиняємо стандартне надсилання форми, щоб сторінка не перезавантажувалась.
+      event.preventDefault();
+      button.disabled = true;
+      try {
+        // Надсилаємо введену частоту як JSON у HTTP POST-запиті.
+        const response = await fetch("/api/frequency", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ frequency_mhz: Number(input.value) })
+        });
+        if (!response.ok) throw new Error("Сервер відхилив команду, HTTP " + response.status);
+        const result = await response.json();
+        commandStatus.textContent = "Встановлено " + result.frequency_mhz + " МГц";
+      } catch (error) {
+        // Відображаємо помилку запиту в інтерфейсі та знову дозволяємо надсилати форму.
+        commandStatus.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

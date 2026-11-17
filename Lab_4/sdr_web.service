@@ -1,0 +1,18 @@
+[Unit]
+Description=SDR web monitor (simulated spectrum)
+After=network.target
+
+[Service]
+Type=simple
+User=arpi
+WorkingDirectory=/home/arpi/Lab_4
+# Один процес використовує спільне значення частоти для всіх клієнтів.
+ExecStart=/home/arpi/Lab_4/.venv/bin/uvicorn sdr_web_app:app --host 0.0.0.0 --port 8001 --workers 1
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sdr_web
+
+[Install]
+WantedBy=multi-user.target
