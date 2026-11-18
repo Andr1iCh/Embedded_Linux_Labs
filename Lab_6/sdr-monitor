@@ -1,0 +1,11 @@
+/var/log/sdr_monitor/*.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    maxsize 10M
+    su arpi arpi
+    create 0640 arpi arpi
+}

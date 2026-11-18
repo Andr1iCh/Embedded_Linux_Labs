@@ -1,0 +1,19 @@
+[Unit]
+Description=Raspberry Pi system metrics in JSON
+After=systemd-journald.service
+
+[Service]
+Type=simple
+User=arpi
+Group=arpi
+UMask=0027
+WorkingDirectory=/home/arpi/Lab_6
+ExecStart=/usr/bin/python3 /home/arpi/Lab_6/sys_monitor.py
+# Створюємо /var/log/sdr_monitor та надаємо користувачу служби право запису.
+LogsDirectory=sdr_monitor
+LogsDirectoryMode=0750
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
