@@ -1,0 +1,10 @@
+# Зразок для клієнта. Пара ключів клієнта відрізняється від ключів RPi.
+[Interface]
+Address = 10.77.0.2/24
+PrivateKey = REPLACE_CLIENT_PRIVATE_KEY
+
+[Peer]
+PublicKey = REPLACE_SERVER_PUBLIC_KEY
+AllowedIPs = 10.77.0.1/32
+Endpoint = 192.168.0.150:51820
+PersistentKeepalive = 25

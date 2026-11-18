@@ -1,0 +1,7 @@
+# Справжні WireGuard-конфігурації містять приватні ключі.
+wg0.conf
+wg-client.conf
+private/
+*.key
+*.pem
+id_ed25519*

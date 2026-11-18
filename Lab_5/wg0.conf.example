@@ -1,0 +1,9 @@
+# Зразок для RPi. Справжній файл створює generate_wireguard.py поза репозиторієм.
+[Interface]
+Address = 10.77.0.1/24
+ListenPort = 51820
+PrivateKey = REPLACE_SERVER_PRIVATE_KEY
+
+[Peer]
+PublicKey = REPLACE_CLIENT_PUBLIC_KEY
+AllowedIPs = 10.77.0.2/32
